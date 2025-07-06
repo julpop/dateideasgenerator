@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Pomysłów na Randkę</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .title-underline {
+            width: 80px;
+            height: 4px;
+            background: #3b82f6;
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .progress-bar-container {
+            flex: 1;
+            margin: 0 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.5s ease;
+        }
+
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .option-button {
+            width: 100%;
+            padding: 1rem;
+            text-align: left;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: #1f2937;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-button:hover {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .result-container {
+            text-align: center;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #dbeafe 0%, #f3f4f6 100%);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .result-subtitle {
+            color: #6b7280;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        @media (min-width: 640px) {
+            .buttons-container {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        .button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .button-primary {
+            background: #3b82f6;
+        }
+
+        .button-primary:hover {
+            background: #2563eb;
+        }
+
+        .button-secondary {
+            background: #6b7280;
+        }
+
+        .button-secondary:hover {
+            background: #4b5563;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1 class="title">Generator Pomysłów na Randkę</h1>
+                <div class="title-underline"></div>
+            </div>
+            
+            <div id="question-container">
+                <div class="progress-container">
+                    <span class="progress-text" id="progress-text">Pytanie 1 z 8</span>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 class="question-title" id="question-title">Pogoda</h2>
+                
+                <div class="options-container" id="options-container">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div id="result-container" class="result-container hidden">
+                <div class="result-card">
+                    <h2 class="result-title" id="result-title">Wynik</h2>
+                    <p class="result-subtitle" id="result-subtitle">Opis wyniku</p>
+                </div>
+                
+                <div class="buttons-container">
+                    <button class="button button-primary" id="new-idea-btn">
+                        Wylosuj inną odpowiedź
+                    </button>
+                    <button class="button button-secondary" id="reset-btn">
+                        Wypełnij test ponownie
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DateIdeaGenerator {
+            constructor() {
+                this.currentQuestion = 0;
+                this.answers = {};
+                this.showResult = false;
+                this.currentResult = null;
+                this.displayedIdea = null;
+
+                this.questions = [
+                    {
+                        id: 'weather',
+                        question: 'Pogoda',
+                        options: ['Słonecznie', 'Deszcz', 'Obojętne']
+                    },
+                    {
+                        id: 'timeOfDay',
+                        question: 'Pora dnia',
+                        options: ['Rano', 'Południe', 'Wieczór', 'Cały dzień']
+                    },
+                    {
+                        id: 'budget',
+                        question: 'Budżet',
+                        options: ['Do 50zł', '50-150zł', '150-300zł', '300+zł', 'Obojętne']
+                    },
+                    {
+                        id: 'preparation',
+                        question: 'Czas na przygotowania',
+                        options: ['Do kilku godzin', 'Do kilku dni', 'Bez przygotowania', 'Obojętne']
+                    },
+                    {
+                        id: 'location',
+                        question: 'Miejsce',
+                        options: ['W domu', 'Na zewnątrz', 'W lokalu', 'Obojętne']
+                    },
+                    {
+                        id: 'outdoor',
+                        question: 'Jeśli na zewnątrz',
+                        options: ['W okolicy', 'Dojazd', 'Obojętne'],
+                        condition: (answers) => answers.location === 'Na zewnątrz'
+                    },
+                    {
+                        id: 'activity',
+                        question: 'Aktywność fizyczna',
+                        options: ['Niska', 'Średnia', 'Wysoka', 'Obojętne']
+                    },
+                    {
+                        id: 'equipment',
+                        question: 'Specjalistyczny sprzęt',
+                        options: ['Tak', 'Nie', 'Obojętne']
+                    }
+                ];
+
+                this.dateIdeas = [
+                    { name: 'Folwark Chawłowo', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Pałac w Radziejowicach', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Rezerwat przyrody Młochowski Grąd', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', 'Obojętne'], preparation: ['Do kilku godzin', 'Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Rezerwat przyrody Skulski las', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', 'Obojętne'], preparation: ['Do kilku godzin', 'Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Dworek w Radoniach', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Piknik w Rybarbarze', weather: ['Słonecznie'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Farma alpak z Widokowej', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Teatr', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Stand-up', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Zoo', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['W okolicy', 'Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Rower wodny lub kajaki', weather: ['Słonecznie'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['W okolicy', 'Dojazd'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Pchli targ', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Escape room', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Planetarium', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Termy', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Sauna', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Łyżwy lub rolki', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['W okolicy'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Wycieczka rowerowa', weather: ['Słonecznie'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['W okolicy', 'Dojazd'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Spacer i lody', weather: ['Słonecznie'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Kino samochodowe', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Wieczór'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Ogród botaniczny', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['W okolicy', 'Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Kręgle', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Bez przygotowania'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Park trampolin', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Nie'] },
+                    { name: 'Paintball laserowy', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Wrotkarnia', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Maraton filmowy', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Gry planszowe', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Bez przygotowania'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Domowe SPA', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Podwójna randka', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Dzień bez telefonu', weather: ['Obojętne'], timeOfDay: ['Cały dzień'], budget: ['Obojętne'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Strzelnica', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Tak'] },
+                    { name: 'Gokarty', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Dojazd'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Kino', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Grzybobranie', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Masaż dla dwojga', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Puzzle', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Bez przygotowania'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Śniadanie na mieście', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Schronisko', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Kolacja przy świecach', weather: ['Obojętne'], timeOfDay: ['Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Degustacja wina i serów', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Quiz o sobie', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Burleska', weather: ['Obojętne'], timeOfDay: ['Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Wyścigi konne', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Lumpeks', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Bez przygotowania'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'LEGO', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Glina', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Tak'] },
+                    { name: 'Malowanie na zmianę', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Origami', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Park wodny', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Nie'] },
+                    { name: 'Basen', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Golf', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Tak'] },
+                    { name: 'Squash', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Tak'] },
+                    { name: 'Spacer z psem', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Spacer nocą', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Wieczór'], budget: ['Do 50zł'], preparation: ['Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'List miłosny', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['W domu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Oglądanie gwiazd', weather: ['Słonecznie'], timeOfDay: ['Wieczór'], budget: ['Do 50zł'], preparation: ['Bez przygotowania'], location: ['Na zewnątrz'], outdoor: ['W okolicy', 'Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Kurnik', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Kasyno', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Wieczór dla dorosłych w CNK', weather: ['Obojętne'], timeOfDay: ['Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Interaktywne Muzeum Flipperów "Pinball Station"', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Muzeum Domków Lalek, Gier i Zabawek', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Muzeum Wódki', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Muzeum Neonów', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Opera', weather: ['Obojętne'], timeOfDay: ['Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Filharmonia', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Muzeum Świat Iluzji', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Zachęta – Narodowa Galeria Sztuki', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja KUK', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja Hub Praga', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja N31', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja Epoka', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja Pod Gigantami', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Restauracja Nuta', weather: ['Obojętne'], timeOfDay: ['Południe', 'Wieczór'], budget: ['150-300zł', '300+zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Spacer z przewodnikiem', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['Na zewnątrz'], outdoor: ['W okolicy'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Galeria handlowa', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Bez przygotowania'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Mecz', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Dojazd'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Quizmate', weather: ['Obojętne'], timeOfDay: ['Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Niewidzialna wystawa', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Salon VR', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Tak'] },
+                    { name: 'Nauka tańca', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Wieczór', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku dni'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Średnia', 'Wysoka'], equipment: ['Nie'] },
+                    { name: 'Ogród botaniczny Arboretum w Rogowie', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Rezerwat Skałki Piekło pod Niekłaniem', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Królewskie Źródła w Puszczy Kozienickiej', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Zimne Doły', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Muzeum - Zamek w Oporowie', weather: ['Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Skansen w Nowej Suchej', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Twierdza Modlin', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł', '50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Bagno Całowanie', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Zamek w Liwie', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Bromierzyk', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Trakt Budnicki i Puszcza Bolimowska', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['Do 50zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Średnia'], equipment: ['Nie'] },
+                    { name: 'Dworek Chełmońskiego w Adamowiźnie', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Muzeum Rolnictwa w Ciechanowcu', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł'], preparation: ['Do kilku godzin'], location: ['Na zewnątrz'], outdoor: ['Dojazd'], activity: ['Niska', 'Średnia'], equipment: ['Nie'] },
+                    { name: 'Pałac Prymasowski', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] },
+                    { name: 'Pałac w Patrykozach', weather: ['Słonecznie', 'Obojętne'], timeOfDay: ['Rano', 'Południe', 'Cały dzień'], budget: ['50-150zł', '150-300zł'], preparation: ['Do kilku godzin'], location: ['W lokalu'], outdoor: ['Obojętne'], activity: ['Niska'], equipment: ['Nie'] }
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.render();
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                document.getElementById('new-idea-btn').addEventListener('click', () => {
+                    this.showNewIdea();
+                });
+
+                document.getElementById('reset-btn').addEventListener('click', () => {
+                    this.resetTest();
+                });
+            }
+
+            getFilteredQuestions() {
+                return this.questions.filter(question => {
+                    if (question.condition) {
+                        return question.condition(this.answers);
+                    }
+                    return true;
+                });
+            }
+
+            handleAnswer(answer) {
+                const filteredQuestions = this.getFilteredQuestions();
+                const newAnswers = { ...this.answers, [filteredQuestions[this.currentQuestion].id]: answer };
+                this.answers = newAnswers;
+                
+                if (this.currentQuestion < filteredQuestions.length - 1) {
+                    this.currentQuestion++;
+                    this.render();
+                } else {
+                    const matchingIdeas = this.findMatchingIdeas(newAnswers);
+                    this.currentResult = matchingIdeas;
+                    this.displayedIdea = this.getRandomIdea();
+                    this.showResult = true;
+                    this.render();
+                }
+            }
+
+            findMatchingIdeas(userAnswers) {
+                const matchingIdeas = this.dateIdeas.filter(idea => {
+                    let matches = true;
+                    
+                    Object.entries(userAnswers).forEach(([key, value]) => {
+                        if (value === 'Obojętne') return;
+                        
+                        if (idea[key] && !idea[key].includes(value)) {
+                            matches = false;
+                        }
+                    });
+                    
+                    return matches;
+                });
+                
+                return matchingIdeas.length > 0 ? matchingIdeas : this.dateIdeas;
+            }
+
+            getRandomIdea() {
+                if (this.currentResult && this.currentResult.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * this.currentResult.length);
+                    return this.currentResult[randomIndex];
+                }
+                return null;
+            }
+
+            showNewIdea() {
+                this.displayedIdea = this.getRandomIdea();
+                this.render();
+            }
+
+            resetTest() {
+                this.currentQuestion = 0;
+                this.answers = {};
+                this.showResult = false;
+                this.currentResult = null;
+                this.displayedIdea = null;
+                this.render();
+            }
+
+            render() {
+                const questionContainer = document.getElementById('question-container');
+                const resultContainer = document.getElementById('result-container');
+
+                if (this.showResult) {
+                    questionContainer.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+                    this.renderResult();
+                } else {
+                    questionContainer.classList.remove('hidden');
+                    resultContainer.classList.add('hidden');
+                    this.renderQuestion();
+                }
+            }
+
+            renderQuestion() {
+                const filteredQuestions = this.getFilteredQuestions();
+                const currentQ = filteredQuestions[this.currentQuestion];
+
+                // Update progress
+                document.getElementById('progress-text').textContent = 
+                    `Pytanie ${this.currentQuestion + 1} z ${filteredQuestions.length}`;
+                document.getElementById('progress-fill').style.width = 
+                    `${((this.currentQuestion + 1) / filteredQuestions.length) * 100}%`;
+
+                // Update question
+                document.getElementById('question-title').textContent = currentQ.question;
+
+                // Update options
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = '';
+
+                currentQ.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.className = 'option-button';
+                    button.textContent = option;
+                    button.addEventListener('click', () => this.handleAnswer(option));
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            renderResult() {
+                document.getElementById('result-title').textContent = this.displayedIdea?.name || 'Brak wyników';
+                document.getElementById('result-subtitle').textContent = 
+                    `Znaleziono ${this.currentResult?.length || 0} pasujących pomysłów!`;
+            }
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new DateIdeaGenerator();
+        });
+    </script>
+</body>
+</html>
